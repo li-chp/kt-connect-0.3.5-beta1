@@ -17,7 +17,7 @@ type ConnectOptions struct {
 	DnsCacheTtl      int64
 	IncludeIps       string
 	ExcludeIps       string
-	Mode             string
+	ConnectMode      string
 	DnsMode          string
 	SharedShadow     bool
 	ClusterDomain    string
@@ -33,10 +33,35 @@ type ExchangeOptions struct {
 
 // MeshOptions ...
 type MeshOptions struct {
-	Mode        string
-	Expose      string
-	VersionMark string
-	RouterImage string
+	MeshMode            string
+	Expose              string
+	VersionMark         string
+	RouterImage         string
+	VirtualServiceName  string
+	DestinationRuleName string
+}
+
+// MeshDebugOptions ...
+type MeshDebugOptions struct {
+	Global              bool
+	DisablePodIp        bool
+	DisableTunDevice    bool
+	DisableTunRoute     bool
+	SocksPort           int
+	DnsCacheTtl         int64
+	IncludeIps          string
+	ExcludeIps          string
+	ConnectMode         string
+	DnsMode             string
+	SharedShadow        bool
+	ClusterDomain       string
+	SkipCleanup         bool
+	MeshMode            string
+	Expose              string
+	VersionMark         string
+	RouterImage         string
+	VirtualServiceName  string
+	DestinationRuleName string
 }
 
 // PreviewOptions ...
@@ -69,6 +94,8 @@ type RuntimeOptions struct {
 	Router string
 	// Mesh version of mesh pod
 	Mesh string
+	// Mesh version of mesh pod
+	MeshDebug string
 	// Origin the origin deployment or service name
 	Origin string
 	// Replicas the origin replicas
@@ -86,6 +113,7 @@ type DaemonOptions struct {
 	ConnectOptions      *ConnectOptions
 	ExchangeOptions     *ExchangeOptions
 	MeshOptions         *MeshOptions
+	MeshDebugOptions    *MeshDebugOptions
 	CleanOptions        *CleanOptions
 	RunAsWorkerProcess  bool
 	KubeConfig          string
@@ -117,11 +145,12 @@ func Get() *DaemonOptions {
 				UserHome: util.UserHome,
 				AppHome:  util.KtHome,
 			},
-			ConnectOptions:  &ConnectOptions{},
-			ExchangeOptions: &ExchangeOptions{},
-			MeshOptions:     &MeshOptions{},
-			PreviewOptions:  &PreviewOptions{},
-			CleanOptions:    &CleanOptions{},
+			ConnectOptions:   &ConnectOptions{},
+			ExchangeOptions:  &ExchangeOptions{},
+			MeshOptions:      &MeshOptions{},
+			MeshDebugOptions: &MeshDebugOptions{},
+			PreviewOptions:   &PreviewOptions{},
+			CleanOptions:     &CleanOptions{},
 		}
 	}
 	return opt

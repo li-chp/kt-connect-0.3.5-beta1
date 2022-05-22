@@ -6,6 +6,7 @@ type ActionInterface interface {
 	Preview(serviceName string) error
 	Exchange(resourceName string) error
 	Mesh(resourceName string) error
+	MeshDebug(resourceName string) error
 	Recover(serviceName string) error
 	Clean() error
 }

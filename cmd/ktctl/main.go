@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	version = "dev"
+	version = "0.3.4"
 )
 
 func init() {
@@ -30,7 +30,7 @@ func main() {
 	opt.Get().RuntimeStore.Version = version
 
 	var rootCmd = &cobra.Command{
-		Use:     "ktctl",
+		Use:     "et",
 		Version: version,
 		Long:    "A utility tool to help you work with Kubernetes dev environment more efficiently",
 	}
@@ -41,13 +41,14 @@ func main() {
 
 	action := &command.Action{}
 	rootCmd.AddCommand(command.NewConnectCommand(action))
-	rootCmd.AddCommand(command.NewExchangeCommand(action))
+	//rootCmd.AddCommand(command.NewExchangeCommand(action))
 	rootCmd.AddCommand(command.NewMeshCommand(action))
-	rootCmd.AddCommand(command.NewPreviewCommand(action))
+	rootCmd.AddCommand(command.NewMeshDebugCommand(action))
+	//rootCmd.AddCommand(command.NewPreviewCommand(action))
 	rootCmd.AddCommand(command.NewCleanCommand(action))
 	rootCmd.AddCommand(command.NewRecoverCommand(action))
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
-	rootCmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl <command> [command options]"))
+	rootCmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "et <command> [command options]"))
 
 	rootCmd.Flags().SortFlags = false
 	rootCmd.PersistentFlags().SortFlags = false

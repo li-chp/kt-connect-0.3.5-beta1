@@ -132,10 +132,10 @@ func isNameUsable(name, meshVersion string, times int) error {
 
 func sanityCheck(svc *coreV1.Service) error {
 	if svc.Annotations != nil && svc.Annotations[util.KtSelector] != "" {
-		return fmt.Errorf("service %s should not have %s annotation, please try use 'ktctl recover %s' to restore it",
+		return fmt.Errorf("service %s should not have %s annotation, please try use 'et recover %s' to restore it",
 			svc.Name, util.KtSelector, svc.Name)
 	} else if svc.Spec.Selector[util.KtRole] != "" {
-		return fmt.Errorf("service %s should not point to kt pods, please try use 'ktctl recover %s' to restore it",
+		return fmt.Errorf("service %s should not point to et pods, please try use 'et recover %s' to restore it",
 			svc.Name, svc.Name)
 	}
 	return nil

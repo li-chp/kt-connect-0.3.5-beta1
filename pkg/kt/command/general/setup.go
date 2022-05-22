@@ -59,7 +59,7 @@ func Prepare() error {
 		return err
 	}
 
-	log.Info().Msgf("KtConnect %s start at %d (%s %s)",
+	log.Info().Msgf("Environment Toolkit %s start at %d (%s %s)",
 		opt.Get().RuntimeStore.Version, os.Getpid(), runtime.GOOS, runtime.GOARCH)
 
 	if !opt.Get().SkipTimeDiff {

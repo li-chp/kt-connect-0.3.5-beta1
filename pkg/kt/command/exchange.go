@@ -27,7 +27,7 @@ func NewExchangeCommand(action ActionInterface) *cobra.Command {
 		},
 	}
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl exchange <service-name> [command options]"))
+	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "et exchange <service-name> [command options]"))
 	cmd.Long = cmd.Short
 
 	cmd.Flags().SortFlags = false

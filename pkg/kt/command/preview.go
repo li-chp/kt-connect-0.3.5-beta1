@@ -26,7 +26,7 @@ func NewPreviewCommand(action ActionInterface) *cobra.Command {
 		},
 	}
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl preview <service-name> [command options]"))
+	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "et preview <service-name> [command options]"))
 	cmd.Long = cmd.Short
 
 	cmd.Flags().SortFlags = false

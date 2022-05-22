@@ -23,7 +23,7 @@ func NewCleanCommand(action ActionInterface) *cobra.Command {
 		},
 	}
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl clean [command options]"))
+	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "et clean [command options]"))
 	cmd.Long = cmd.Short
 
 	cmd.Flags().SortFlags = false

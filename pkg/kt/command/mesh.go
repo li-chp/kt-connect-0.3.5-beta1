@@ -26,15 +26,17 @@ func NewMeshCommand(action ActionInterface) *cobra.Command {
 		},
 	}
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl mesh <service-name> [command options]"))
+	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "et mesh <service-name> [command options]"))
 	cmd.Long = cmd.Short
 
 	cmd.Flags().SortFlags = false
 	cmd.InheritedFlags().SortFlags = false
 	cmd.Flags().StringVar(&opt.Get().MeshOptions.Expose, "expose", "", "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80")
-	cmd.Flags().StringVar(&opt.Get().MeshOptions.Mode, "mode", util.MeshModeAuto, "Mesh method 'auto' or 'manual'")
-	cmd.Flags().StringVar(&opt.Get().MeshOptions.VersionMark, "versionMark", "", "Specify the version of mesh service, e.g. '0.0.1' or 'mark:local'")
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.MeshMode, "meshMode", util.MeshModeAuto, "Mesh method 'auto' or 'manual'")
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.VersionMark, "versionMark", "etMark", "Specify the version of mesh service, e.g. '0.0.1' or 'mark:local'")
 	cmd.Flags().StringVar(&opt.Get().MeshOptions.RouterImage, "routerImage", fmt.Sprintf("%s:v%s", util.ImageKtRouter, opt.Get().RuntimeStore.Version), "(auto method only) Customize router image")
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.VirtualServiceName, "vsName", "", "(manual method only) Specify istio VirtualService name")
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.DestinationRuleName, "drName", "", "(manual method only) Specify istio DestinationRule name")
 	_ = cmd.MarkFlagRequired("expose")
 	return cmd
 }
@@ -60,12 +62,12 @@ func (action *Action) Mesh(resourceName string) error {
 		return fmt.Errorf("target port %s not exists in service %s", port, svc.Name)
 	}
 
-	if opt.Get().MeshOptions.Mode == util.MeshModeManual {
+	if opt.Get().MeshOptions.MeshMode == util.MeshModeManual {
 		err = mesh.ManualMesh(svc)
-	} else if opt.Get().MeshOptions.Mode == util.MeshModeAuto {
+	} else if opt.Get().MeshOptions.MeshMode == util.MeshModeAuto {
 		err = mesh.AutoMesh(svc)
 	} else {
-		err = fmt.Errorf("invalid mesh method '%s', supportted are %s, %s", opt.Get().MeshOptions.Mode,
+		err = fmt.Errorf("invalid mesh method '%s', supportted are %s, %s", opt.Get().MeshOptions.MeshMode,
 			util.MeshModeAuto, util.MeshModeManual)
 	}
 	if err != nil {

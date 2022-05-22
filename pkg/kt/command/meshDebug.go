@@ -2,33 +2,32 @@ package command
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
 	"github.com/alibaba/kt-connect/pkg/kt/command/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
+	"github.com/alibaba/kt-connect/pkg/kt/command/mesh"
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
-	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
-// NewConnectCommand return new connect command
-func NewConnectCommand(action ActionInterface) *cobra.Command {
+// NewMeshCommand return new mesh command
+func NewMeshDebugCommand(action ActionInterface) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "connect",
-		Short: "Create a network tunnel to kubernetes cluster",
+		Use:   "meshDebug",
+		Short: "combined connect and mesh in one command",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := preCheck(); err != nil {
-				return err
-			}
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return action.Connect()
+			if len(args) == 0 {
+				return fmt.Errorf("name of service to meshDebug is required")
+			}
+			return action.MeshDebug(args[0])
 		},
 	}
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "et connect [command options]"))
+	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "et meshDebug <service-name> [command options]"))
 	cmd.Long = cmd.Short
 
 	cmd.Flags().SortFlags = false
@@ -45,14 +44,36 @@ func NewConnectCommand(action ActionInterface) *cobra.Command {
 	cmd.Flags().BoolVar(&opt.Get().ConnectOptions.DisableTunRoute, "disableTunRoute", false, "(tun2socks mode only) Do not auto setup tun device route")
 	cmd.Flags().IntVar(&opt.Get().ConnectOptions.SocksPort, "proxyPort", 2223, "(tun2socks mode only) Specify the local port which socks5 proxy should use")
 	cmd.Flags().Int64Var(&opt.Get().ConnectOptions.DnsCacheTtl, "dnsCacheTtl", 60, "(local dns mode only) DNS cache refresh interval in seconds")
+
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.Expose, "expose", "", "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80")
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.MeshMode, "meshMode", util.MeshModeAuto, "Mesh method 'auto' or 'manual'")
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.VersionMark, "versionMark", "", "Specify the version of mesh service, e.g. '0.0.1' or 'mark:local'")
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.RouterImage, "routerImage", fmt.Sprintf("%s:v%s", util.ImageKtRouter, opt.Get().RuntimeStore.Version), "(auto method only) Customize router image")
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.VirtualServiceName, "vsName", "", "(manual method only) Specify istio VirtualService name")
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.DestinationRuleName, "drName", "", "(manual method only) Specify istio DestinationRule name")
+	_ = cmd.MarkFlagRequired("expose")
 	return cmd
 }
 
-// Connect setup vpn to kubernetes cluster
-func (action *Action) Connect() error {
-	ch, err := general.SetupProcess(util.ComponentConnect)
+//Mesh exchange kubernetes workload
+func (action *Action) MeshDebug(resourceName string) error {
+	ch, err := general.SetupProcess(util.ComponentMeshDebug)
 	if err != nil {
 		return err
+	}
+
+	if port := util.FindBrokenLocalPort(opt.Get().MeshOptions.Expose); port != "" {
+		return fmt.Errorf("no application is running on port %s", port)
+	}
+
+	// Get service to mesh
+	svc, err := general.GetServiceByResourceName(resourceName, opt.Get().Namespace)
+	if err != nil {
+		return err
+	}
+
+	if port := util.FindInvalidRemotePort(opt.Get().MeshOptions.Expose, general.GetTargetPorts(svc)); port != "" {
+		return fmt.Errorf("target port %s not exists in service %s", port, svc.Name)
 	}
 
 	if !opt.Get().ConnectOptions.SkipCleanup {
@@ -74,48 +95,20 @@ func (action *Action) Connect() error {
 	log.Info().Msgf(" All looks good, now you can access to resources in the kubernetes cluster")
 	log.Info().Msg("---------------------------------------------------------------")
 
-	// watch background process, clean the workspace and exit if background process occur exception
-	s := <-ch
-	log.Info().Msgf("Terminal signal is %s", s)
-	return nil
-}
-
-func preCheck() error {
-	if err := checkPermissionAndOptions(); err != nil {
+	if opt.Get().MeshOptions.MeshMode == util.MeshModeManual {
+		err = mesh.ManualMesh(svc)
+	} else if opt.Get().MeshOptions.MeshMode == util.MeshModeAuto {
+		err = mesh.AutoMesh(svc)
+	} else {
+		err = fmt.Errorf("invalid mesh method '%s', supportted are %s, %s", opt.Get().MeshOptions.MeshMode,
+			util.MeshModeAuto, util.MeshModeManual)
+	}
+	if err != nil {
 		return err
 	}
-	if pid := util.GetDaemonRunning(util.ComponentConnect); pid > 0 {
-		return fmt.Errorf("another connect process already running at %d, exiting", pid)
-	}
-	return nil
-}
 
-func silenceCleanup() {
-	if r, err := clean.CheckClusterResources(); err == nil {
-		for _, name := range r.PodsToDelete {
-			_ = cluster.Ins().RemovePod(name, opt.Get().Namespace)
-		}
-		for _, name := range r.ConfigMapsToDelete {
-			_ = cluster.Ins().RemoveConfigMap(name, opt.Get().Namespace)
-		}
-		for _, name := range r.DeploymentsToDelete {
-			_ = cluster.Ins().RemoveDeployment(name, opt.Get().Namespace)
-		}
-		for _, name := range r.ServicesToDelete {
-			_ = cluster.Ins().RemoveService(name, opt.Get().Namespace)
-		}
-	}
-}
-
-func checkPermissionAndOptions() error {
-	if !util.IsRunAsAdmin() {
-		if util.IsWindows() {
-			return fmt.Errorf("permission declined, please re-run connect command as Administrator")
-		}
-		return fmt.Errorf("permission declined, please re-run connect command with 'sudo'")
-	}
-	if opt.Get().ConnectOptions.ConnectMode == util.ConnectModeTun2Socks && opt.Get().ConnectOptions.DnsMode == util.DnsModePodDns {
-		return fmt.Errorf("dns mode '%s' is not available for connect mode '%s'", util.DnsModePodDns, util.ConnectModeTun2Socks)
-	}
+	// watch background process, clean the workspace and exit if background process occur exception
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
 	return nil
 }
