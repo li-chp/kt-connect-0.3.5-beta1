@@ -7,6 +7,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	versionedclient "istio.io/client-go/pkg/clientset/versioned"
 	k8sRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -124,7 +125,12 @@ func combineKubeOpts() error {
 	if err != nil {
 		return err
 	}
+	istioClient, err := versionedclient.NewForConfig(restConfig)
+	if err != nil {
+		return err
+	}
 	opt.Get().RuntimeStore.Clientset = clientSet
+	opt.Get().RuntimeStore.IstioClient = istioClient
 	opt.Get().RuntimeStore.RestConfig = restConfig
 
 	clusterName := "none"

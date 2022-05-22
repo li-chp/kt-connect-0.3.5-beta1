@@ -2,6 +2,8 @@ package cluster
 
 import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
+	v1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
+	versionedclient "istio.io/client-go/pkg/clientset/versioned"
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -53,11 +55,18 @@ type KubernetesInterface interface {
 	GetKtResources(namespace string) ([]coreV1.Pod, []coreV1.ConfigMap, []appV1.Deployment, []coreV1.Service, error)
 	GetAllNamespaces() (*coreV1.NamespaceList, error)
 	ClusterCidrs(namespace string) (cidrs []string, err error)
+
+	GetVirtualServiceList(namespace string) (*v1alpha3.VirtualServiceList, error)
+	GetVirtualService(name, namespace string) (*v1alpha3.VirtualService, error)
+	GetDestinationRule(name, namespace string) (*v1alpha3.DestinationRule, error)
+	PatchVirtualService(name, service, namespace, op, meshKey, meshVersion string) (*v1alpha3.VirtualService, error)
+	PatchDestinationRule(name, namespace string, op, meshKey, meshVersion string) (*v1alpha3.DestinationRule, error)
 }
 
 // Kubernetes implements KubernetesInterface
 type Kubernetes struct {
-	Clientset kubernetes.Interface
+	Clientset   kubernetes.Interface
+	IstioClient versionedclient.Interface
 }
 
 // Cli the singleton type
@@ -67,7 +76,8 @@ var instance *Kubernetes
 func Ins() KubernetesInterface {
 	if instance == nil {
 		instance = &Kubernetes{
-			Clientset: opt.Get().RuntimeStore.Clientset,
+			Clientset:   opt.Get().RuntimeStore.Clientset,
+			IstioClient: opt.Get().RuntimeStore.IstioClient,
 		}
 	}
 	return instance

@@ -27,9 +27,28 @@ func CleanupWorkspace() {
 		recoverExchangedTarget()
 	} else if opt.Get().RuntimeStore.Component == util.ComponentMesh {
 		recoverAutoMeshRoute()
+		recoverIstio()
+	}
+	if opt.Get().RuntimeStore.Component == util.ComponentMeshDebug {
+		recoverGlobalHostsAndProxy()
+		recoverAutoMeshRoute()
+		recoverIstio()
 	}
 	cleanService()
 	cleanShadowPodAndConfigMap()
+}
+
+func recoverIstio() {
+	if opt.Get().RuntimeStore.VirtualServicePatch == true {
+		log.Info().Msgf("Cleaning VirtualService....")
+		cluster.Ins().PatchVirtualService(opt.Get().MeshOptions.VirtualServiceName, "service",
+			opt.Get().Namespace, "remove", "meshKey", "meshVersion")
+	}
+	if opt.Get().RuntimeStore.DestinationRulePatch == true {
+		log.Info().Msgf("Cleaning DestinationRule....")
+		cluster.Ins().PatchDestinationRule(opt.Get().MeshOptions.DestinationRuleName, opt.Get().Namespace,
+			"remove", "meshKey", "meshVersion")
+	}
 }
 
 func recoverGlobalHostsAndProxy() {

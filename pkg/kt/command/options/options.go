@@ -5,6 +5,7 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	versionedclient "istio.io/client-go/pkg/clientset/versioned"
 )
 
 // ConnectOptions ...
@@ -79,7 +80,8 @@ type CleanOptions struct {
 
 // RuntimeOptions ...
 type RuntimeOptions struct {
-	Clientset kubernetes.Interface
+	Clientset   kubernetes.Interface
+	IstioClient versionedclient.Interface
 	// Version ktctl version
 	Version string
 	// UserHome path of user home, same as ${HOME}
@@ -103,7 +105,9 @@ type RuntimeOptions struct {
 	// Service exposed service name
 	Service string
 	// RestConfig kubectl config
-	RestConfig *rest.Config
+	RestConfig           *rest.Config
+	VirtualServicePatch  bool
+	DestinationRulePatch bool
 }
 
 // DaemonOptions cli options
