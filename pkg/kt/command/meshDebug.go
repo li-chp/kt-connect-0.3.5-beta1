@@ -15,7 +15,7 @@ import (
 func NewMeshDebugCommand(action ActionInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "meshDebug",
-		Short: "combined connect and mesh in one command",
+		Short: "Combined connect and mesh in one command",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return general.Prepare()
 		},
@@ -47,7 +47,7 @@ func NewMeshDebugCommand(action ActionInterface) *cobra.Command {
 
 	cmd.Flags().StringVar(&opt.Get().MeshOptions.Expose, "expose", "", "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80")
 	cmd.Flags().StringVar(&opt.Get().MeshOptions.MeshMode, "meshMode", util.MeshModeAuto, "Mesh method 'auto' or 'manual'")
-	cmd.Flags().StringVar(&opt.Get().MeshOptions.VersionMark, "versionMark", "", "Specify the version of mesh service, e.g. '0.0.1' or 'mark:local'")
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.VersionMark, "versionMark", "ET-MARK", "Specify the version of mesh service, e.g. '0.0.1' or 'mark:local'")
 	cmd.Flags().StringVar(&opt.Get().MeshOptions.RouterImage, "routerImage", fmt.Sprintf("%s:v%s", util.ImageKtRouter, opt.Get().RuntimeStore.Version), "(auto method only) Customize router image")
 	cmd.Flags().StringVar(&opt.Get().MeshOptions.VirtualServiceName, "vsName", "", "(manual method only) Specify istio VirtualService name, default same as service name")
 	cmd.Flags().StringVar(&opt.Get().MeshOptions.DestinationRuleName, "drName", "", "(manual method only) Specify istio DestinationRule name, default same as service name")

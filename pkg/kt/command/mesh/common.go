@@ -8,7 +8,7 @@ import (
 )
 
 func getVersion(versionMark string) (string, string) {
-	versionKey := "etMark"
+	versionKey := "ET-MARK"
 	versionVal := strings.ToLower(util.RandomString(5))
 	if len(versionMark) != 0 {
 		versionParts := strings.Split(versionMark, ":")
@@ -25,7 +25,7 @@ func getVersion(versionMark string) (string, string) {
 			versionVal = versionParts[0]
 		}
 	}
-	return versionKey, versionVal
+	return versionKey, strings.ToLower(versionVal)
 }
 
 func isValidKey(key string) bool {

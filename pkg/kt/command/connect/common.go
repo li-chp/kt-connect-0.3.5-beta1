@@ -148,9 +148,9 @@ func getServiceHosts(namespace string, shortDomainOnly bool) (map[string]string,
 }
 
 func getOrCreateShadow() (string, string, string, error) {
-	shadowPodName := fmt.Sprintf("kt-connect-shadow-%s", strings.ToLower(util.RandomString(5)))
+	shadowPodName := fmt.Sprintf("et-connect-shadow-%s", strings.ToLower(util.RandomString(5)))
 	if opt.Get().ConnectOptions.SharedShadow {
-		shadowPodName = fmt.Sprintf("kt-connect-shadow-daemon")
+		shadowPodName = fmt.Sprintf("et-connect-shadow-daemon")
 	}
 
 	endPointIP, podName, privateKeyPath, err := cluster.Ins().GetOrCreateShadow(shadowPodName, getLabels(),

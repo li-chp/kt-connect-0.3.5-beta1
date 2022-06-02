@@ -39,13 +39,13 @@ func ManualMesh(svc *coreV1.Service) error {
 		return err
 	}
 
-	log.Info().Msgf("update Istio rule start...")
+	log.Info().Msgf("Update Istio rule start...")
 
 	cluster.Ins().PatchDestinationRule(drName, namespace, "add", meshKey, meshVersion)
 	opt.Get().RuntimeStore.DestinationRulePatch = true
 	cluster.Ins().PatchVirtualService(vsName, svc.Name, namespace, "add", meshKey, meshVersion)
 	opt.Get().RuntimeStore.VirtualServicePatch = true
-	log.Info().Msg("update Istio rule finish...")
+	log.Info().Msg("Update Istio rule finish...")
 	log.Info().Msg("---------------------------------------------------------------")
 	log.Info().Msgf(" Now you can access your service by header '%s: %s' ", strings.ToUpper(meshKey), meshVersion)
 	log.Info().Msg("---------------------------------------------------------------")
